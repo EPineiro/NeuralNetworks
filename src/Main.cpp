@@ -16,10 +16,10 @@ void visualize_data(vector<pair<mat, mat> > &data);
 void train_net(vector<pair<mat, mat> > &training_mat, vector<pair<mat, mat> > &validation_data);
 void evaluate_net(vector<pair<mat, mat> > &test_mat);
 
-string NET_FILE_NAME = "C:/Users/EPineiro/workspace/NeuralNets/resources/net.dat";
-string MNIST_DIR = "C:/Users/EPineiro/workspace/NeuralNets/resources/MNIST";
-string MNIST_REDUCED_DIR = "C:/Users/EPineiro/workspace/NeuralNets/resources/mnist_reducido";
-string MONITORED_DATA_DIR = "C:/Users/EPineiro/workspace/NeuralNets/resources/monitored_data";
+string NET_FILE_NAME = "<local dir>/NeuralNets/resources/net.dat";
+string MNIST_DIR = "<local dir>/NeuralNets/resources/MNIST";
+string MNIST_REDUCED_DIR = "<local dir>/NeuralNets/resources/mnist_reducido";
+string MONITORED_DATA_DIR = "<local dir>/NeuralNets/resources/monitored_data";
 
 int INPUT_LAYER_SIZE = 784;
 int HIDDEN_LAYER_SIZE = 30;
