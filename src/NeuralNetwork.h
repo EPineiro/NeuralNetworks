@@ -18,6 +18,18 @@
 #include <armadillo>
 #include <opencv2/opencv.hpp>
 
+typedef struct {
+
+	int cant_epochs;
+	int mini_batch_size;
+	double eta;
+	double lambda;
+	double mu;
+	double beta;
+	double sparsity_param;
+
+} TrainingParams;
+
 class NeuralNetwork {
 
 private:
@@ -50,7 +62,7 @@ private:
 	void update_mini_batch(
 			std::vector<std::pair<arma::mat, arma::mat> >::const_iterator begin,
 			std::vector<std::pair<arma::mat, arma::mat> >::const_iterator end,
-			double eta, double lambda, double mu, int mini_batch_size, int training_size);
+			TrainingParams params, int training_size);
 
 	void back_propagation(const arma::mat &x, const arma::mat &y,
 			std::vector<arma::mat> &delta_nabla_w,
@@ -69,8 +81,7 @@ public:
 	arma::mat feed_forward(const arma::mat &input);
 
 	void stochastic_gradient_descent_training(
-			std::vector<std::pair<arma::mat, arma::mat> > &data, int epochs,
-			int mini_batch_size, double eta, double lambda, double mu,
+			std::vector<std::pair<arma::mat, arma::mat> > &data, TrainingParams params,
 			std::vector<std::pair<arma::mat, arma::mat> > test_data = std::vector<std::pair<arma::mat, arma::mat> >());
 
 	int evaluate(const std::vector<std::pair<arma::mat, arma::mat> > &test_data);
@@ -81,6 +92,7 @@ public:
 	void save(const std::string &file_name);
 	void load(const std::string &file_name);
 	void print();
+	void visualize_hidden_units(int layer_number, int image_size);
 
 	void save_monitored_data(const std::string &dir);
 

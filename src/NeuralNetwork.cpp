@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace cv;
 
 /**
  * Constructor
@@ -67,24 +68,23 @@ mat NeuralNetwork::feed_forward(const mat &input) {
  * 		  This param is optional, but if present is used to print the results of the net between each epoch.
  */
 void NeuralNetwork::stochastic_gradient_descent_training(
-		vector<pair<mat, mat> > &training_data, int epochs, int mini_batch_size,
-		double eta, double lambda, double mu, vector<pair<mat, mat> > test_data) {
+		vector<pair<mat, mat> > &training_data, TrainingParams params,
+		vector<pair<mat, mat> > test_data) {
 
-	for(int i = 0; i < epochs; i++) {
+	for(int i = 0; i < params.cant_epochs; i++) {
 
 		cout<<"Training epoch: "<<i+1<<endl;
 
 		random_shuffle(training_data.begin(), training_data.end());
 
 		//generate mini batches
-		for(size_t j = 0; j < training_data.size(); j += mini_batch_size) {
+		for(size_t j = 0; j < training_data.size(); j += params.mini_batch_size) {
 
-			size_t endPos = j + mini_batch_size;
+			size_t endPos = j + params.mini_batch_size;
 			if(endPos >= training_data.size())
 				endPos = training_data.size();
 
-			update_mini_batch(training_data.begin() + j, training_data.begin() + endPos,
-					eta, lambda, mu, mini_batch_size, training_data.size());
+			update_mini_batch(training_data.begin() + j, training_data.begin() + endPos, params, training_data.size());
 		}
 
 
@@ -94,11 +94,11 @@ void NeuralNetwork::stochastic_gradient_descent_training(
 
 
 		if(monitor_training_cost)
-			training_costs.push_back(calcule_total_cost(training_data, lambda));
+			training_costs.push_back(calcule_total_cost(training_data, params.lambda));
 		if(monitor_training_accuracy)
 			training_accuracies.push_back(evaluate(training_data));
 		if(monitor_validation_cost)
-			validation_costs.push_back(calcule_total_cost(test_data, lambda));
+			validation_costs.push_back(calcule_total_cost(test_data, params.lambda));
 		if(monitor_validation_accuracy)
 			validation_accuracies.push_back(evaluate(test_data));
 	}
@@ -118,7 +118,7 @@ void NeuralNetwork::stochastic_gradient_descent_training(
 void NeuralNetwork::update_mini_batch(
 		vector<pair<mat, mat> >::const_iterator begin,
 		vector<pair<mat, mat> >::const_iterator end,
-		double eta, double lambda, double mu,  int mini_batch_size, int training_size) {
+		TrainingParams params, int training_size) {
 
 	vector<mat> nabla_w, nabla_b;
 
@@ -149,10 +149,10 @@ void NeuralNetwork::update_mini_batch(
 		//weights[i] = ((1 - (eta * (lambda/training_size))) * weights[i]) - ((eta / mini_batch_size) * nabla_w[i]);
 		//biases[i] = biases[i] - ((eta / mini_batch_size) * nabla_b[i]);
 
-		momentum_weights[i] = (mu * momentum_weights[i]) - ((eta / mini_batch_size) * nabla_w[i]);
-		momentum_biases[i] = (mu * momentum_biases[i]) - ((eta / mini_batch_size) * nabla_b[i]);
+		momentum_weights[i] = (params.mu * momentum_weights[i]) - ((params.eta / params.mini_batch_size) * nabla_w[i]);
+		momentum_biases[i] = (params.mu * momentum_biases[i]) - ((params.eta / params.mini_batch_size) * nabla_b[i]);
 
-		weights[i] = ((1 - (eta * (lambda/training_size))) * weights[i]) + momentum_weights[i];
+		weights[i] = ((1 - (params.eta * (params.lambda / training_size))) * weights[i]) + momentum_weights[i];
 		biases[i] = biases[i] + momentum_biases[i];
 	}
 }
@@ -424,6 +424,39 @@ void NeuralNetwork::print() {
 	}
 }
 
+/**************************************************************************************************/
+/**
+ * Utility method to visualize what are learning the hidden units in given layer.
+ * The method uses OpenCV to show each hidden unit in a window.
+ * What is shown is the input for wich the hidden unit is maximally activated.
+ * @param number of the layer to visualize.
+ * @param size of the image (width and height). The image is assumed to be square.
+ */
+void NeuralNetwork::visualize_hidden_units(int layer_number, int image_size) {
+
+	for (int i = 0; i < layer_sizes[layer_number]; i++) {
+
+		cv::Mat image(image_size, image_size, 0);
+
+		mat factor = weights[layer_number - 1].row(i) * weights[layer_number - 1].row(i).t();
+
+		int k = 0;
+		for (int r = 0; r < image_size; r++) {
+			for (int c = 0; c < image_size; c++) {
+
+				image.at<uchar> (r, c) = ((weights[layer_number - 1](i, k++)) / sqrt(factor(0,0))) * 2550000;
+			}
+		}
+
+		cout<<image<<endl<<endl;
+		stringstream ss;
+		ss << "[" << i + 1 << "]";
+		namedWindow(ss.str());
+		imshow(ss.str(), image);
+	}
+
+	waitKey(0);
+}
 /*************************************************************************************************/
 /**
  * Saves the monitored data during training to several files in the given directory.
